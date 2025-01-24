@@ -44,6 +44,7 @@ jobs:
           ssh -o "StrictHostKeyChecking=no" ${{ secrets.USER }}@${{secrets.IP }} << EOF
             cd /var/www/ci_cd-drf
             sudo git pull origin master
+            python manage.py migrate
           EOF
 
       - name: Deploy via Supervisor

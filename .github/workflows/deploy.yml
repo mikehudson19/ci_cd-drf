@@ -28,3 +28,26 @@ jobs:
 
       - name: Run Tests
         run: python manage.py test
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Configure SSH
+        uses: webfactory/ssh-agent@v0.5.4
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Pull from Github repo
+        run: |
+          ssh -o "StrictHostKeyChecking=no" ${{ secrets.USER }}@${{secrets.IP }} << EOF
+            cd /var/www/ci_cd-drf
+            sudo git pull origin master
+          EOF
+
+      - name: Deploy via Supervisor
+        run: |
+          ssh -o "StrictHostKeyChecking=no" ${{ secrets.USER }}@${{secrets.IP }} << EOF
+          sudo supervisorctl restart all              
+          EOF

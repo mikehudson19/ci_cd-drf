@@ -1,0 +1,80 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environment directories
+env/
+venv/
+ENV/
+.VENV/
+.venv/
+
+# Django stuff:
+db.sqlite3  # Ignore SQLite database files
+*.sqlite3
+*.log       # Ignore log files
+*.pot       # Ignore translation template files
+
+# Django secret and config files
+*.env       # Ignore environment variable files
+config/settings/*.pyc  # Ignore compiled settings files
+config/settings/local.py  # Ignore local development settings
+
+# Static and media folders (shouldn't be committed if using a storage backend like S3)
+staticfiles/
+media/
+static
+
+# Celery beat schedule file
+celerybeat-schedule
+
+# Node modules (if using Node.js for front-end assets)
+node_modules/
+
+# Coverage reports
+htmlcov/
+.coverage
+.coverage.*
+
+# pytest
+.cache/
+*.pytest_cache/
+
+# MyPy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Docker files
+*.dockerignore
+.docker/
+
+# Testing and CI/CD
+.tox/
+.nox/
+pip-log.txt
+pip-delete-this-directory.txt
+coverage.xml
+nosetests.xml
+test-results/
+
+# Miscellaneous
+*.bak
+*.tmp
+.DS_Store
+Thumbs.db
+
+# Python egg files
+*.egg
+*.egg-info/
+dist/
+build/
+
+.env

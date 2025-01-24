@@ -18,7 +18,11 @@ def register_scheduled_jobs():
         Add jobs to the Redis queue.
         Only add active jobs.
     """
-    jobs = ScheduledJob.objects.filter(is_active=True).order_by('type', 'id').values()
+
+    jobs = [
+        { 'args': None, 'funct': 'pull_customer_data', 'cron': '* * * * *', 'result_ttl': 3600, 'ttl': 3600, 'queue': 'default'},
+        { 'args': None, 'funct': 'pull_billing_line_data', 'cron': '* * * * *', 'result_ttl': 3600, 'ttl': 3600, 'queue': 'default'}
+    ]
 
     for j in jobs:
         args = j['args'] or []

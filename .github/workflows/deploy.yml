@@ -9,6 +9,8 @@ jobs:
     runs-on: ubuntu-latest
     env:
       DJANGO_SECRET_KEY: 'nshf93fb8vgds73gfi'
+      REDIS_HOST: 'localhost'
+      REDIS_PORT: 6379
 
     steps:
       - name: Checkout Repo

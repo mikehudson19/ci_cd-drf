@@ -34,27 +34,19 @@ jobs:
     runs-on: self-hosted
 
     steps:
-#      - name: Configure SSH
-#        uses: webfactory/ssh-agent@v0.5.4
-#        with:
-#          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
       - name: Checkout Repo
         uses: actions/checkout@v2
 
       - name: Pull from Github repo
         run: |
-          ssh -o "StrictHostKeyChecking=no" ${{ secrets.USER }}@${{secrets.IP }} << EOF
             cd /var/www/ci_cd-drf
             sudo git pull origin master
             source venv/bin/activate
             python manage.py migrate
             deactivate
-          EOF
 
       - name: Deploy via Supervisor
         run: |
-          ssh -o "StrictHostKeyChecking=no" ${{ secrets.USER }}@${{secrets.IP }} << EOF
           echo "Deploying commit: $GITHUB_SHA"
           sudo supervisorctl restart all              
-          EOF

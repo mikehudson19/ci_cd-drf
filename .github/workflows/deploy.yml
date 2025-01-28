@@ -6,7 +6,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     env:
       DJANGO_SECRET_KEY: 'nshf93fb8vgds73gfi'
       REDIS_HOST: 'localhost'
@@ -55,6 +55,6 @@ jobs:
       - name: Deploy via Supervisor
         run: |
           ssh -o "StrictHostKeyChecking=no" ${{ secrets.USER }}@${{secrets.IP }} << EOF
-          echo "Deploying commit $GITHUB_SHA"
+          echo "Deploying commit: $GITHUB_SHA"
           sudo supervisorctl restart all              
           EOF

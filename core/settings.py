@@ -15,12 +15,13 @@ https://docs.djangoproject.com/en/5.1/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.1/ref/settings/
 """
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
-
-env = environ.Env()
-environ.Env.read_env()
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 
@@ -28,7 +29,7 @@ current_dir = os.path.dirname(os.path.abspath(__file__))
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = env('DJANGO_SECRET_KEY')
+SECRET_KEY = os.getenv('DJANGO_SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
@@ -57,8 +58,8 @@ INSTALLED_APPS = [
 
 RQ_QUEUES = {
     'default': {
-        'HOST': env('REDIS_HOST'),
-        'PORT': env('REDIS_PORT'),
+        'HOST': os.getenv('REDIS_HOST'),
+        'PORT': os.getenv('REDIS_PORT'),
         'DB': 0,
         'DEFAULT_TIMEOUT': 360,
     }

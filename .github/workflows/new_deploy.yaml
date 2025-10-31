@@ -26,6 +26,7 @@
         - name: Create .env file
           run: |
             echo "DJANGO_SECRET_KEY=${{ secrets.DJANGO_SECRET_KEY }}" >> .env
+            cat .env
 
         - name: Set commit SHA variable
           id: vars

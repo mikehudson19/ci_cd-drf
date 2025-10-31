@@ -34,12 +34,12 @@
 
         - name: Run unit tests
           run: |
-            docker-compose -f docker-compose.cicd.yaml run --rm ci-api python manage.py test
+            docker compose -f docker-compose.cicd.yaml run --rm ci-api python manage.py test
           shell: bash
 
         - name: Stop and remove containers
           run: |
-            docker-compose -f docker-compose.cicd.yaml down
+            docker compose -f docker-compose.cicd.yaml down
           shell: bash
           if: always()
 

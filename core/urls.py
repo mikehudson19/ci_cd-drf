@@ -23,7 +23,6 @@ urlpatterns = [
     path('api/', include('api.urls')),
     path('auth/', include('djoser.urls')),
     path('auth/', include('djoser.urls.jwt')),
-    path('django-rq/', include('django_rq.urls')),  # For monitoring and managing jobs
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
 
     path('api/schema/swagger-ui/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),

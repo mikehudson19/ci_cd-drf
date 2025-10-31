@@ -23,6 +23,10 @@
         - name: Checkout code
           uses: actions/checkout@v4
 
+        - name: Create .env file
+          run: |
+            echo "DJANGO_SECRET_KEY=${{ secrets.DJANGO_SECRET_KEY }}" >> .env
+
         - name: Set commit SHA variable
           id: vars
           run: echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
@@ -56,7 +60,7 @@
 
         - name: Build Docker image
           run: |
-            docker build --build-arg DJANGO_SECRET_KEY=${{ secrets.DJANGO_SECRET_KEY }} -t ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.vars.outputs.sha_short }} .
+            docker build -t ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.vars.outputs.sha_short }} .
             docker tag ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.vars.outputs.sha_short }} ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
 
         - name: Push Docker image

@@ -51,22 +51,9 @@ INSTALLED_APPS = [
     'djoser',
     'corsheaders',
     'api',
-    'django_rq',
-    'jobs',
     'drf_spectacular',
 ]
 
-RQ_QUEUES = {
-    'default': {
-        'HOST': os.getenv('REDIS_HOST'),
-        'PORT': os.getenv('REDIS_PORT'),
-        'DB': 0,
-        'DEFAULT_TIMEOUT': 360,
-    }
-}
-
-# Add admin panel for RQ
-RQ_SHOW_ADMIN_LINK = True
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',

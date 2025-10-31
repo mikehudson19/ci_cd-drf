@@ -64,10 +64,15 @@
         - name: Log in to GitHub Container Registry
           run: echo "${{ secrets.REPO_TOKEN }}" | docker login ${{ env.REGISTRY }} -u ${{ github.actor }} --password-stdin
 
+        - name: Update docker-compose.yml with new image tag
+          run: |
+            cd ~/cicd-test
+            sed -i 's|image: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}:.*|image: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}:${{ needs.build.outputs.image_tag }}|' docker-compose.yaml
+            echo image: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}:${{ needs.build.outputs.image_tag }}        
+
         - name: Deploy with Docker Compose
           run: |
             cd ~/cicd-test
-            export IMAGE_TAG=${{ needs.test-build-push.outputs.image_tag }}
             docker compose pull api 
             docker compose up -d --no-deps api
 

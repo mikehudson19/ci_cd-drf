@@ -1,83 +1,83 @@
-  name: CI/CD Pipeline
-  on:
-    push:
-      branches:
-        - master
-  env:
-    REGISTRY: ghcr.io
-    DJANGO_SECRET_KEY: ${{ secrets.DJANGO_SECRET_KEY }}
+name: CI/CD Pipeline
+on:
+  push:
+    branches:
+      - master
+env:
+  REGISTRY: ghcr.io
+  DJANGO_SECRET_KEY: ${{ secrets.DJANGO_SECRET_KEY }}
 
-  jobs:
-    test-build-push:
-      runs-on: ubuntu-latest
-      permissions:
-        contents: read
-        packages: write
-      outputs:
-        image_tag: ${{ steps.vars.outputs.sha_short }}
+jobs:
+  test-build-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      image_tag: ${{ steps.vars.outputs.sha_short }}
 
-      steps:
-        - name: Checkout code
-          uses: actions/checkout@v4
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-        - name: Create .env file
-          run: |
-            echo "DJANGO_SECRET_KEY=${{ secrets.DJANGO_SECRET_KEY }}" >> .env
-            cat .env
+      - name: Create .env file
+        run: |
+          echo "DJANGO_SECRET_KEY=${{ secrets.DJANGO_SECRET_KEY }}" >> .env
+          cat .env
 
-        - name: Set commit SHA variable
-          id: vars
-          run: echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+      - name: Set commit SHA variable
+        id: vars
+        run: echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
 
-        - name: Run unit tests
-          run: |
-            docker compose -f docker-compose.cicd.yaml run --rm ci-api python manage.py test
-          shell: bash
+      - name: Run unit tests
+        run: |
+          docker compose -f docker-compose.cicd.yaml run --rm ci-api python manage.py test
+        shell: bash
 
-        - name: Set image tag
-          id: meta
-          run: |
-            SHORT_SHA=${{ steps.vars.outputs.sha_short }}
-            echo "image_tag=${SHORT_SHA}" >> $GITHUB_OUTPUT
-            echo "Image tag: ${SHORT_SHA}"
+      - name: Set image tag
+        id: meta
+        run: |
+          SHORT_SHA=${{ steps.vars.outputs.sha_short }}
+          echo "image_tag=${SHORT_SHA}" >> $GITHUB_OUTPUT
+          echo "Image tag: ${SHORT_SHA}"
 
-        - name: Log in to GitHub Container Registry
-          run: echo "${{ secrets.REPO_TOKEN }}" | docker login ${{ env.REGISTRY }} -u ${{ github.actor }} --password-stdin
+      - name: Log in to GitHub Container Registry
+        run: echo "${{ secrets.REPO_TOKEN }}" | docker login ${{ env.REGISTRY }} -u ${{ github.actor }} --password-stdin
 
-        - name: Build Docker image
-          run: |
-            docker build -t ${{ env.REGISTRY }}/${{ github.repository }}:${{ steps.vars.outputs.sha_short }} .
-            docker tag ${{ env.REGISTRY }}/${{ github.repository }}:${{ steps.vars.outputs.sha_short }} ${{ env.REGISTRY }}/${{ github.repository }}:latest
+      - name: Build Docker image
+        run: |
+          docker build -t ${{ env.REGISTRY }}/${{ github.repository }}:${{ steps.vars.outputs.sha_short }} .
+          docker tag ${{ env.REGISTRY }}/${{ github.repository }}:${{ steps.vars.outputs.sha_short }} ${{ env.REGISTRY }}/${{ github.repository }}:latest
 
-        - name: Push Docker image
-          run: |
-            docker push ${{ env.REGISTRY }}/${{ github.repository }}:${{ steps.vars.outputs.sha_short }}
-            docker push ${{ env.REGISTRY }}/${{ github.repository }}:latest
+      - name: Push Docker image
+        run: |
+          docker push ${{ env.REGISTRY }}/${{ github.repository }}:${{ steps.vars.outputs.sha_short }}
+          docker push ${{ env.REGISTRY }}/${{ github.repository }}:latest
 
-    deploy:
-      runs-on: self-hosted
-      needs: test-build-push
+  deploy:
+    runs-on: self-hosted
+    needs: test-build-push
 
-      steps:
-        - name: Log in to GitHub Container Registry
-          run: echo "${{ secrets.REPO_TOKEN }}" | docker login ${{ env.REGISTRY }} -u ${{ github.actor }} --password-stdin
+    steps:
+      - name: Log in to GitHub Container Registry
+        run: echo "${{ secrets.REPO_TOKEN }}" | docker login ${{ env.REGISTRY }} -u ${{ github.actor }} --password-stdin
 
-        - name: Update docker-compose.yml with new image tag
-          run: |
-            cd ~/cicd-test
-            sed -i 's|image: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}:.*|image: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}:${{ needs.build.outputs.image_tag }}|' docker-compose.yaml
-            echo image: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}:${{ needs.build.outputs.image_tag }}        
+      - name: Update docker-compose.yml with new image tag
+        run: |
+          cd ~/cicd-test
+          sed -i 's|image: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}:.*|image: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}:${{ needs.test-build-push.outputs.image_tag }}|' docker-compose.yaml
+          echo image: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}:${{ needs.test-build-push.outputs.image_tag }}        
 
-        - name: Deploy with Docker Compose
-          run: |
-            cd ~/cicd-test
-            docker compose pull api 
-            docker compose up -d --no-deps api
+      - name: Deploy with Docker Compose
+        run: |
+          cd ~/cicd-test
+          docker compose pull api 
+          docker compose up -d --no-deps api
 
-        - name: Clean up old images
-          run: |
-            images=$(docker images ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }} --format "{{.ID}}" | grep -v "<none>")
-            count=$(echo "$images" | wc -l)
-            if [ $count -gt 2 ]; then
-              echo "$images" | tail -n +3 | xargs -r docker rmi -f || true
-            fi
+      - name: Clean up old images
+        run: |
+          images=$(docker images ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }} --format "{{.ID}}" | grep -v "<none>")
+          count=$(echo "$images" | wc -l)
+          if [ $count -gt 2 ]; then
+            echo "$images" | tail -n +3 | xargs -r docker rmi -f || true
+          fi

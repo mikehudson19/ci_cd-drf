@@ -23,6 +23,10 @@
         - name: Checkout code
           uses: actions/checkout@v4
 
+        - name: Set commit SHA variable
+          id: vars
+          run: echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+
         - name: Set up Python
           run: |
             sudo apt-get update

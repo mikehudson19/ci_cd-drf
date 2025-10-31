@@ -5,7 +5,6 @@
         - master
   env:
     REGISTRY: ghcr.io
-    IMAGE_NAME: ${{ github.repository }}
     DJANGO_SECRET_KEY: ${{ secrets.DJANGO_SECRET_KEY }}
     REDIS_HOST: 'localhost'
     REDIS_PORT: 6379
@@ -37,12 +36,6 @@
             docker compose -f docker-compose.cicd.yaml run --rm ci-api python manage.py test
           shell: bash
 
-        - name: Stop and remove containers
-          run: |
-            docker compose -f docker-compose.cicd.yaml down
-          shell: bash
-          if: always()
-
         - name: Set image tag
           id: meta
           run: |
@@ -55,45 +48,33 @@
 
         - name: Build Docker image
           run: |
-            docker build -t ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.vars.outputs.sha_short }} .
-            docker tag ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.vars.outputs.sha_short }} ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+            docker build -t ${{ env.REGISTRY }}/${{ github.repository }}:${{ steps.vars.outputs.sha_short }} .
+            docker tag ${{ env.REGISTRY }}/${{ github.repository }}:${{ steps.vars.outputs.sha_short }} ${{ env.REGISTRY }}/${{ github.repository }}:latest
 
         - name: Push Docker image
           run: |
-            docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.vars.outputs.sha_short }}
-            docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+            docker push ${{ env.REGISTRY }}/${{ github.repository }}:${{ steps.vars.outputs.sha_short }}
+            docker push ${{ env.REGISTRY }}/${{ github.repository }}:latest
 
-#    deploy:
-#      runs-on: self-hosted
-#      needs: test-build-push
-#
-#      steps:
-#        - name: Log in to GitHub Container Registry
-#          run: echo "${{ secrets.REPO_TOKEN }}" | docker login ${{ env.REGISTRY }} -u ${{ github.actor }} --password-stdin
-#
-#        - name: Deploy with Docker Compose
-#          run: |
-#            cd /path/to/your/deployment/directory
-#            export IMAGE_TAG=${{ needs.test-build-push.outputs.image_tag }}
-#            docker compose pull api
-#            docker compose up -d api
-#
-#        - name: Cleanup old images
-#          run: |
-#            # Get all image tags for this repository, sorted by creation date
-#            ALL_TAGS=$(docker images ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }} --format "{{.Tag}}" | grep -v "latest" | sort -r)
-#
-#            # Keep current and previous image
-#            CURRENT_TAG=${{ needs.test-build-push.outputs.image_tag }}
-#            KEEP_TAGS=$(echo "$ALL_TAGS" | head -n 2)
-#
-#            # Remove all other images
-#            for tag in $ALL_TAGS; do
-#              if ! echo "$KEEP_TAGS" | grep -q "^${tag}$"; then
-#                echo "Removing old image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${tag}"
-#                docker rmi ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${tag} || true
-#              fi
-#            done
-#
-#            # Also clean up dangling images
-#            docker image prune -f
+    deploy:
+      runs-on: self-hosted
+      needs: test-build-push
+
+      steps:
+        - name: Log in to GitHub Container Registry
+          run: echo "${{ secrets.REPO_TOKEN }}" | docker login ${{ env.REGISTRY }} -u ${{ github.actor }} --password-stdin
+
+        - name: Deploy with Docker Compose
+          run: |
+            cd ~/cicd-test
+            export IMAGE_TAG=${{ needs.test-build-push.outputs.image_tag }}
+            docker compose pull api 
+            docker compose up -d --no-deps api
+
+        - name: Clean up old images
+          run: |
+            images=$(docker images ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }} --format "{{.ID}}" | grep -v "<none>")
+            count=$(echo "$images" | wc -l)
+            if [ $count -gt 2 ]; then
+              echo "$images" | tail -n +3 | xargs -r docker rmi -f || true
+            fi

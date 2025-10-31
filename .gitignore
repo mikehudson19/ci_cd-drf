@@ -26,6 +26,9 @@ staticfiles/
 media/
 static
 
+*.log
+*.sqlite
+
 # Celery beat schedule file
 celerybeat-schedule
 

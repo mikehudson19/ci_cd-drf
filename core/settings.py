@@ -50,7 +50,6 @@ INSTALLED_APPS = [
     'djoser',
     'corsheaders',
     'api',
-    'solid',
     'django_rq',
     'jobs',
     'drf_spectacular',
@@ -78,6 +77,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
+    'api.middleware.RoleBasedAccessControlMiddleware'
 ]
 
 ROOT_URLCONF = 'core.urls'

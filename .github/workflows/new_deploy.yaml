@@ -32,22 +32,16 @@
           id: vars
           run: echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
 
-        - name: Set up Python
-          run: |
-            sudo apt-get update
-            sudo apt-get install -y python3 python3-pip python3-venv
-
-        - name: Install dependencies
-          run: |
-            python3 -m venv venv
-            . venv/bin/activate
-            pip install --upgrade pip
-            pip install -r requirements.txt
-
         - name: Run unit tests
           run: |
-            . venv/bin/activate
-            python manage.py test
+            docker-compose -f docker-compose.cicd.yaml run --rm ci-api python manage.py test
+          shell: bash
+
+        - name: Stop and remove containers
+          run: |
+            docker-compose -f docker-compose.cicd.yaml down
+          shell: bash
+          if: always()
 
         - name: Set image tag
           id: meta

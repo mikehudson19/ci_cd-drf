@@ -7,6 +7,8 @@
     REGISTRY: ghcr.io
     IMAGE_NAME: ${{ github.repository }}
     DJANGO_SECRET_KEY: ${{ secrets.DJANGO_SECRET_KEY }}
+    REDIS_HOST: 'localhost'
+    REDIS_PORT: 6379
 
   jobs:
     test-build-push:
